@@ -32,8 +32,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   session: {
-      strategy: "jwt" // Database sessions with Credentials provider is tricky, JWT is easier
+      strategy: "jwt" 
   },
+  trustHost: true,
   callbacks: {
       async session({ session, token }) {
           if (token.sub && session.user) {
