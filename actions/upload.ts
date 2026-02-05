@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
-const pdf = require("pdf-parse")
+import PDFParser from "pdf2json"
 import { revalidatePath } from "next/cache"
 
 export async function uploadResume(formData: FormData) {
@@ -18,8 +18,17 @@ export async function uploadResume(formData: FormData) {
     const buffer = Buffer.from(await file.arrayBuffer())
 
     if (file.type === "application/pdf") {
-      const data = await pdf(buffer)
-      text = data.text
+      text = await new Promise((resolve, reject) => {
+          const pdfParser = new PDFParser(null, true); // true = text only
+          
+          pdfParser.on("pdfParser_dataError", errData => reject(errData));
+          pdfParser.on("pdfParser_dataReady", pdfData => {
+              // @ts-ignore
+              resolve(pdfParser.getRawTextContent());
+          });
+
+          pdfParser.parseBuffer(buffer);
+      });
     } else if (file.type === "text/plain") {
       text = buffer.toString("utf-8")
     } else {
